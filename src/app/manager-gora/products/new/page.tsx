@@ -6,10 +6,12 @@ import { createClient } from "@/utils/supabase/client";
 import { createProductAction } from "@/lib/actions/admin-products";
 import ImageCropper from "@/components/admin/ImageCropper";
 import { Upload, X, Plus, Image as ImageIcon, Loader2 } from "lucide-react";
+import { CATEGORY_HIERARCHY } from "@/lib/constants";
 
 interface Category {
   id: string;
   name: string;
+  slug: string;
 }
 
 interface Variant {
@@ -29,6 +31,7 @@ interface ProductImage {
   width: number;
   height: number;
   aspect_ratio: string;
+    color_variant?: string;
 }
 
 export default function NewProductPage() {
@@ -40,13 +43,17 @@ export default function NewProductPage() {
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [subcategory, setSubcategory] = useState("");
   const [basePrice, setBasePrice] = useState("");
   const [comparePrice, setComparePrice] = useState("");
   const [status, setStatus] = useState("draft");
-  const [discountBadge, setDiscountBadge] = useState("");
+    const [discountBadge, setDiscountBadge] = useState("");
 
   // Categories
   const [categories, setCategories] = useState<Category[]>([]);
+
+  const selectedCategoryObj = categories.find((c) => c.id === categoryId);
+  const availableSubcategories = selectedCategoryObj?.slug ? CATEGORY_HIERARCHY[selectedCategoryObj.slug] || [] : [];
 
   // Variants
   const [variants, setVariants] = useState<Variant[]>([]);
@@ -62,7 +69,7 @@ export default function NewProductPage() {
 
   useEffect(() => {
     async function fetchCategories() {
-      const { data } = await supabase.from("categories").select("id, name").eq("is_active", true);
+      const { data } = await supabase.from("categories").select("id, name, slug").eq("is_active", true);
       if (data) setCategories(data);
     }
     fetchCategories();
@@ -141,6 +148,10 @@ export default function NewProductPage() {
     setImages(images.filter((img) => img.id !== id));
   };
 
+  const setImageColorVariant = (id: string, color: string) => {
+    setImages(images.map((img) => img.id === id ? { ...img, color_variant: color } : img));
+  };
+
   const setPrimaryImage = (id: string) => {
     setImages(images.map((img) => ({ ...img, is_primary: img.id === id })));
   };
@@ -183,6 +194,7 @@ export default function NewProductPage() {
       formData.append("slug", slug);
       formData.append("description", description);
       formData.append("category_id", categoryId);
+      if (subcategory) formData.append("subcategory", subcategory);
       formData.append("base_price", basePrice);
       if (comparePrice) formData.append("compare_at_price", comparePrice);
       formData.append("status", status);
@@ -193,7 +205,8 @@ export default function NewProductPage() {
       const imagesMeta = images.map((img, idx) => ({
         storage_key: `products/${crypto.randomUUID()}/original_${idx}.webp`,
         url: "", // The server action will know the R2 domain
-        alt_text: `${name} - Image ${idx + 1}`,
+        alt_text: `${name} - Image ${idx + 1}` + (img.color_variant ? `|color:${img.color_variant}` : ""),
+        color: img.color_variant,
         width: img.width,
         height: img.height,
         aspect_ratio: img.aspect_ratio,
@@ -270,10 +283,24 @@ export default function NewProductPage() {
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Category *</label>
-              <select required value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="w-full px-3 py-2 border rounded-md bg-white">
+              <select required value={categoryId} onChange={(e) => { setCategoryId(e.target.value); setSubcategory(""); }} className="w-full px-3 py-2 border rounded-md bg-white">
                 <option value="">Select a category</option>
                 {categories.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Subcategory</label>
+              <select 
+                value={subcategory} 
+                onChange={(e) => setSubcategory(e.target.value)} 
+                disabled={availableSubcategories.length === 0} 
+                className="w-full px-3 py-2 border rounded-md bg-white disabled:bg-gray-100 disabled:text-gray-400"
+              >
+                <option value="">{availableSubcategories.length === 0 ? "N/A" : "Select a subcategory"}</option>
+                {availableSubcategories.map(sub => (
+                  <option key={sub} value={sub}>{sub}</option>
                 ))}
               </select>
             </div>
@@ -299,26 +326,41 @@ export default function NewProductPage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {images.map((img) => (
-              <div key={img.id} className={`relative aspect-[3/4] border-2 rounded-lg overflow-hidden group ${img.is_primary ? 'border-black' : 'border-gray-200'}`}>
-                <img src={img.preview} alt="Preview" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
-                  <div className="flex justify-end">
-                    <button type="button" onClick={() => removeImage(img.id)} className="p-1 bg-white rounded-full text-red-600 hover:bg-red-50">
-                      <X className="w-4 h-4" />
-                    </button>
+            {images.map((img) => {
+              const uniqueColors = Array.from(new Set(variants.map(v => v.color).filter(Boolean)));
+              return (
+                <div key={img.id} className="flex flex-col gap-2">
+                  <div className={`relative aspect-[3/4] border-2 rounded-lg overflow-hidden group ${img.is_primary ? 'border-black' : 'border-gray-200'}`}>
+                    <img src={img.preview} alt="Preview" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
+                      <div className="flex justify-end">
+                        <button type="button" onClick={() => removeImage(img.id)} className="p-1 bg-white rounded-full text-red-600 hover:bg-red-50">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      {!img.is_primary && (
+                        <button type="button" onClick={() => setPrimaryImage(img.id)} className="w-full py-1 bg-white text-black text-xs font-bold rounded">
+                          Set Primary
+                        </button>
+                      )}
+                    </div>
+                    {img.is_primary && (
+                      <div className="absolute top-2 left-2 bg-black text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">PRIMARY</div>
+                    )}
                   </div>
-                  {!img.is_primary && (
-                    <button type="button" onClick={() => setPrimaryImage(img.id)} className="w-full py-1 bg-white text-black text-xs font-bold rounded">
-                      Set Primary
-                    </button>
-                  )}
+                  <select
+                    value={img.color_variant || ""}
+                    onChange={(e) => setImageColorVariant(img.id, e.target.value)}
+                    className="w-full text-xs p-1.5 border border-gray-300 rounded focus:outline-none focus:border-black"
+                  >
+                    <option value="">(All Colors)</option>
+                    {uniqueColors.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
                 </div>
-                {img.is_primary && (
-                  <div className="absolute top-2 left-2 bg-black text-white text-xs px-2 py-0.5 rounded font-semibold">Primary</div>
-                )}
-              </div>
-            ))}
+              );
+            })}
             {images.length === 0 && (
               <div className="col-span-full py-12 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg text-gray-500">
                 <ImageIcon className="w-8 h-8 mb-2 text-gray-400" />
@@ -401,3 +443,8 @@ export default function NewProductPage() {
     </div>
   );
 }
+
+
+
+
+

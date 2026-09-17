@@ -4,12 +4,14 @@ interface PromoConfig {
   title?: string;
   buttonText?: string;
   buttonLink?: string;
+  imageUrl?: string;
 }
 
 export default function PromoBlock({ config }: { config?: PromoConfig }) {
   const title = config?.title || "Because Every Look Deserves an Upgrade";
   const buttonText = config?.buttonText || "Shop Now";
   const buttonLink = config?.buttonLink || "/shop";
+  const imageUrl = config?.imageUrl || "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=800&q=80";
 
   return (
     <div className="w-full bg-[#f9f9f9] flex items-center min-h-[600px]">
@@ -36,8 +38,8 @@ export default function PromoBlock({ config }: { config?: PromoConfig }) {
         {/* Right Image */}
         <div className="flex-1 w-full h-[500px] md:h-[600px] relative bg-gray-200">
           <img 
-            src="https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=800&q=80" 
-            alt="Men's fashion" 
+            src={imageUrl} 
+            alt="Promo feature" 
             className="w-full h-full object-cover object-top"
           />
         </div>

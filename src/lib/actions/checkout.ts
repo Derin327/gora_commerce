@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
@@ -64,6 +64,16 @@ export async function createOrder(data: {
     return { error: "You must be logged in to place an order." };
   }
 
+  // 1b. Automatically save/update the user's profile with this shipping data
+  await admin.from("profiles").upsert({
+    id: user.id,
+    phone: data.shippingInfo.phone,
+    address: data.shippingInfo.address,
+    city: data.shippingInfo.city,
+    pincode: data.shippingInfo.pincode,
+    updated_at: new Date().toISOString()
+  });
+
   try {
     let secureSubtotal = 0;
     const finalOrderItems = [];
@@ -72,7 +82,7 @@ export async function createOrder(data: {
     for (const item of data.items) {
       const { data: dbVariant } = await admin
         .from("product_variants")
-        .select("*, products(name)")
+        .select("*, products(name, base_price)")
         .eq("id", item.id)
         .single();
 
@@ -80,12 +90,12 @@ export async function createOrder(data: {
         return { error: `Product variant not found for ${item.name}` };
       }
 
-      if (dbVariant.stock < item.quantity) {
-        return { error: `Not enough stock for ${item.name}. Only ${dbVariant.stock} left.` };
+      if ((dbVariant.stock_quantity ?? 0) < item.quantity) {
+        return { error: `Not enough stock for ${item.name}. Only ${dbVariant.stock_quantity ?? 0} left.` };
       }
 
-      // Use the database price, ignoring what the client sent
-      const securePrice = dbVariant.price;
+      // Use variant price_override if set, otherwise fall back to product base_price
+      const securePrice = dbVariant.price_override ?? dbVariant.products.base_price;
       const itemTotal = securePrice * item.quantity;
       secureSubtotal += itemTotal;
 
@@ -140,9 +150,9 @@ export async function createOrder(data: {
 
     // 5. Decrement Stock securely
     for (const item of finalOrderItems) {
-      const { data: variant } = await admin.from("product_variants").select("stock").eq("id", item.variant_id).single();
+      const { data: variant } = await admin.from("product_variants").select("stock_quantity").eq("id", item.variant_id).single();
       if (variant) {
-        await admin.from("product_variants").update({ stock: variant.stock - item.quantity }).eq("id", item.variant_id);
+        await admin.from("product_variants").update({ stock_quantity: (variant.stock_quantity ?? 0) - item.quantity }).eq("id", item.variant_id);
       }
     }
 
@@ -151,3 +161,4 @@ export async function createOrder(data: {
     return { error: error.message || "An unexpected error occurred." };
   }
 }
+

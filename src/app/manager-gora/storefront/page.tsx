@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useTransition } from "react";
 import { Loader2, Check, LayoutTemplate, Plus, Trash2, Upload } from "lucide-react";
@@ -15,8 +15,35 @@ interface Component {
 
 const DEFAULT_COMPONENTS = [
   { component_type: "hero_banner", name: "Hero Banner", defaultConf: { heading: "", subheading: "", videoUrl: "", buttonText: "", buttonLink: "" } },
-  { component_type: "promo_block", name: "Promo Block", defaultConf: { title: "", buttonText: "", buttonLink: "" } },
-  { component_type: "announcement_bar", name: "Announcement Bar", defaultConf: { text: "" } },
+  { component_type: "promo_block", name: "Promo Block", defaultConf: { title: "", buttonText: "", buttonLink: "", imageUrl: "" } },
+  { component_type: "announcement_bar", name: "Top Bar & Announcement", defaultConf: { 
+    text: "Special Offer: Enjoy 40% OFF on Two Hot-Selling Products!", 
+    linkText: "SHOP NOW",
+    linkUrl: "/offers",
+    socials: {
+      instagram: "https://instagram.com",
+      facebook: "https://facebook.com",
+      youtube: "https://youtube.com"
+    }
+  } },
+  { component_type: "footer_config", name: "Footer Config", defaultConf: {  
+    stores: [
+      { name: "Kanchipuram", url: "" },
+      { name: "Trichy Thillai Nagar", url: "" },
+      { name: "Cuddalore", url: "" },
+      { name: "Pondicherry MG Road", url: "" },
+      { name: "Coimbatore Saibaba Colony", url: "" },
+      { name: "Coimbatore Lakshmi Mill", url: "" },
+      { name: "Kumbakonam", url: "" },
+      { name: "Erode", url: "" },
+      { name: "Salem", url: "" }
+    ],
+    help: {
+      address: "No 378, Mahatma Gandhi Road,\nNext to Petit Canal Street,\nPondicherry - 605001.",
+      phones: ["(+91) 90036 35574", "(+91) 77080 16139", "(+91) 99407 37575"],
+      email: "gora.clothing@gmail.com"
+    }
+  } },
 ];
 
 export default function AdminStorefrontPage() {
@@ -123,10 +150,10 @@ export default function AdminStorefrontPage() {
       {error && <div className="bg-red-50 text-red-600 p-4 rounded-md mb-6 text-sm">{error}</div>}
 
       <div className="space-y-8">
-        {/* Announcement Bar */}
+                {/* Announcement Bar */}
         <section className="bg-white border border-gray-200 rounded-lg p-6">
           <div className="flex justify-between items-start mb-4">
-            <h2 className="text-lg font-bold flex items-center gap-2"><LayoutTemplate className="w-5 h-5 text-gray-400" /> Announcement Bar</h2>
+            <h2 className="text-lg font-bold flex items-center gap-2"><LayoutTemplate className="w-5 h-5 text-gray-400" /> Top Bar & Announcement</h2>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={getComp("announcement_bar").is_active} onChange={(e) => toggleActive("announcement_bar", e.target.checked)} className="w-4 h-4 accent-black" />
               <span className="text-sm font-semibold">Active</span>
@@ -134,10 +161,47 @@ export default function AdminStorefrontPage() {
           </div>
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase text-gray-700 mb-1">Text content</label>
+              <label className="block text-xs font-bold uppercase text-gray-700 mb-1">Announcement Text</label>
               <input type="text" value={getComp("announcement_bar").config.text || ""} onChange={(e) => handleUpdate("announcement_bar", "text", e.target.value)} placeholder="Special Offer: Enjoy 40% OFF..." className="w-full border p-2 text-sm rounded focus:border-black outline-none" />
             </div>
-            <button onClick={() => handleSave("announcement_bar")} className="bg-black text-white px-4 py-2 text-sm font-semibold rounded hover:bg-gray-800 transition">Save Section</button>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold uppercase text-gray-700 mb-1">Link Text</label>
+                <input type="text" value={getComp("announcement_bar").config.linkText || ""} onChange={(e) => handleUpdate("announcement_bar", "linkText", e.target.value)} placeholder="SHOP NOW" className="w-full border p-2 text-sm rounded focus:border-black outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase text-gray-700 mb-1">Link URL</label>
+                <input type="text" value={getComp("announcement_bar").config.linkUrl || ""} onChange={(e) => handleUpdate("announcement_bar", "linkUrl", e.target.value)} placeholder="/offers" className="w-full border p-2 text-sm rounded focus:border-black outline-none" />
+              </div>
+            </div>
+            
+            <div className="border-t pt-4 mt-4">
+              <h3 className="text-sm font-bold mb-3">Social Links</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <label className="w-24 text-xs font-bold uppercase text-gray-700">Instagram</label>
+                  <input type="text" value={getComp("announcement_bar").config.socials?.instagram || ""} onChange={(e) => {
+                    const soc = { ...getComp("announcement_bar").config.socials, instagram: e.target.value };
+                    handleUpdate("announcement_bar", "socials", soc);
+                  }} placeholder="https://instagram.com/..." className="flex-1 border p-2 text-sm rounded focus:border-black outline-none" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <label className="w-24 text-xs font-bold uppercase text-gray-700">Facebook</label>
+                  <input type="text" value={getComp("announcement_bar").config.socials?.facebook || ""} onChange={(e) => {
+                    const soc = { ...getComp("announcement_bar").config.socials, facebook: e.target.value };
+                    handleUpdate("announcement_bar", "socials", soc);
+                  }} placeholder="https://facebook.com/..." className="flex-1 border p-2 text-sm rounded focus:border-black outline-none" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <label className="w-24 text-xs font-bold uppercase text-gray-700">YouTube</label>
+                  <input type="text" value={getComp("announcement_bar").config.socials?.youtube || ""} onChange={(e) => {
+                    const soc = { ...getComp("announcement_bar").config.socials, youtube: e.target.value };
+                    handleUpdate("announcement_bar", "socials", soc);
+                  }} placeholder="https://youtube.com/..." className="flex-1 border p-2 text-sm rounded focus:border-black outline-none" />
+                </div>
+              </div>
+            </div>
+            <button onClick={() => handleSave("announcement_bar")} className="bg-black text-white px-4 py-2 text-sm font-semibold rounded hover:bg-gray-800 transition mt-4">Save Section</button>
           </div>
         </section>
 
@@ -193,8 +257,18 @@ export default function AdminStorefrontPage() {
             </label>
           </div>
           <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold uppercase text-gray-700 mb-1">Title</label>
+              <div>
+                <label className="block text-xs font-bold uppercase text-gray-700 mb-1">Promo Image URL</label>
+                <div className="flex gap-2">
+                  <input type="text" value={getComp("promo_block").config.imageUrl || ""} onChange={(e) => handleUpdate("promo_block", "imageUrl", e.target.value)} placeholder="https://..." className="flex-1 border p-2 text-sm rounded focus:border-black outline-none" />
+                  <label className="bg-gray-100 border border-gray-200 text-gray-700 px-4 py-2 rounded text-sm font-semibold cursor-pointer hover:bg-gray-200 transition flex items-center justify-center min-w-[120px]">
+                    {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Upload className="w-4 h-4 mr-2" /> Upload</>}
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, "promo_block", "imageUrl")} disabled={isUploading} />
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase text-gray-700 mb-1">Title</label>
               <input type="text" value={getComp("promo_block").config.title || ""} onChange={(e) => handleUpdate("promo_block", "title", e.target.value)} placeholder="Because Every Look Deserves an Upgrade" className="w-full border p-2 text-sm rounded focus:border-black outline-none" />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -210,10 +284,80 @@ export default function AdminStorefrontPage() {
             <button onClick={() => handleSave("promo_block")} className="bg-black text-white px-4 py-2 text-sm font-semibold rounded hover:bg-gray-800 transition">Save Section</button>
           </div>
         </section>
+        {/* Footer Config */}
+        <section className="bg-white border border-gray-200 rounded-lg p-6">
+          <div className="flex justify-between items-start mb-4">
+            <h2 className="text-lg font-bold flex items-center gap-2"><LayoutTemplate className="w-5 h-5 text-gray-400" /> Footer Config</h2>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={getComp("footer_config").is_active} onChange={(e) => toggleActive("footer_config", e.target.checked)} className="w-4 h-4 accent-black" />
+              <span className="text-sm font-semibold">Active</span>
+            </label>
+          </div>
+          <div className="space-y-6">
+            
+            <div>
+              <h3 className="text-sm font-bold border-b pb-2 mb-3">Our Stores</h3>
+              {(getComp("footer_config").config.stores || []).map((store: any, idx: number) => (
+                <div key={idx} className="flex gap-2 mb-2 items-center">
+                  <input type="text" value={store.name} onChange={(e) => {
+                    const newStores = [...getComp("footer_config").config.stores];
+                    newStores[idx].name = e.target.value;
+                    handleUpdate("footer_config", "stores", newStores);
+                  }} placeholder="Store Name" className="flex-1 border p-2 text-sm rounded focus:border-black outline-none" />
+                  <input type="text" value={store.url || ""} onChange={(e) => {
+                    const newStores = [...getComp("footer_config").config.stores];
+                    newStores[idx].url = e.target.value;
+                    handleUpdate("footer_config", "stores", newStores);
+                  }} placeholder="Google Maps URL" className="flex-1 border p-2 text-sm rounded focus:border-black outline-none" />
+                  <button onClick={() => {
+                    const newStores = getComp("footer_config").config.stores.filter((_: any, i: number) => i !== idx);
+                    handleUpdate("footer_config", "stores", newStores);
+                  }} className="text-red-500 p-2 hover:bg-red-50 rounded"><Trash2 className="w-4 h-4" /></button>
+                </div>
+              ))}
+              <button onClick={() => {
+                const newStores = [...(getComp("footer_config").config.stores || []), { name: "", url: "" }];
+                handleUpdate("footer_config", "stores", newStores);
+              }} className="text-xs font-bold text-black border border-black rounded px-3 py-1 flex items-center gap-1 hover:bg-black hover:text-white transition"><Plus className="w-3 h-3"/> Add Store</button>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-bold border-b pb-2 mb-3">Help & Support</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase text-gray-700 mb-1">Address</label>
+                  <textarea value={getComp("footer_config").config.help?.address || ""} onChange={(e) => {
+                    const help = { ...getComp("footer_config").config.help, address: e.target.value };
+                    handleUpdate("footer_config", "help", help);
+                  }} rows={3} className="w-full border p-2 text-sm rounded focus:border-black outline-none"></textarea>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase text-gray-700 mb-1">Phone Numbers (comma separated)</label>
+                  <input type="text" value={(getComp("footer_config").config.help?.phones || []).join(", ")} onChange={(e) => {
+                    const help = { ...getComp("footer_config").config.help, phones: e.target.value.split(",").map(s => s.trim()).filter(Boolean) };
+                    handleUpdate("footer_config", "help", help);
+                  }} className="w-full border p-2 text-sm rounded focus:border-black outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase text-gray-700 mb-1">Email</label>
+                  <input type="email" value={getComp("footer_config").config.help?.email || ""} onChange={(e) => {
+                    const help = { ...getComp("footer_config").config.help, email: e.target.value };
+                    handleUpdate("footer_config", "help", help);
+                  }} className="w-full border p-2 text-sm rounded focus:border-black outline-none" />
+                </div>
+              </div>
+            </div>
+
+            <button onClick={() => handleSave("footer_config")} className="bg-black text-white px-4 py-2 text-sm font-semibold rounded hover:bg-gray-800 transition">Save Footer Config</button>
+          </div>
+        </section>
       </div>
     </div>
   );
 }
+
+
+
 
 
 

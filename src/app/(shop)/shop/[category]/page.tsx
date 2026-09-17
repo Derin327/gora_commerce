@@ -56,12 +56,14 @@ const fallbackProducts = [
 
 export const revalidate = 60;
 
-export default async function CategoryPage({ params }: { params: { category: string } }) {
+export default async function CategoryPage({ params, searchParams }: { params: { category: string }, searchParams: { subcategory?: string } }) {
   const categorySlug = decodeURIComponent(params.category).toLowerCase();
+  const subcategory = searchParams?.subcategory;
   
-  const { category, products: dbProducts } = await getProductsByCategory(categorySlug);
+  const { category, products: dbProducts } = await getProductsByCategory(categorySlug, subcategory);
   
-  const categoryTitle = category?.name || categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1);
+  const baseTitle = category?.name || categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1);
+  const categoryTitle = subcategory ? `${subcategory} ${baseTitle}` : baseTitle;
   const categoryDesc = category?.description || `Explore our collection of premium ${categoryTitle}. Every piece in this category is carefully curated for quality and style.`;
 
   // Fallback to mock if database has no products for this category yet
@@ -90,7 +92,7 @@ export default async function CategoryPage({ params }: { params: { category: str
         </div>
 
         {displayProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
             {displayProducts.map(prod => (
               <ProductCard key={prod.id} {...prod} />
             ))}
@@ -106,3 +108,4 @@ export default async function CategoryPage({ params }: { params: { category: str
     </main>
   );
 }
+

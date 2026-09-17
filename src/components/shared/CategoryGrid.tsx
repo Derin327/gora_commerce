@@ -17,9 +17,9 @@ export default async function CategoryGrid() {
       <h2 className="text-xl md:text-2xl font-semibold text-center mb-12 tracking-wide uppercase">
         Shop By Category
       </h2>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 md:gap-8 max-w-7xl mx-auto justify-items-center">
         {categories.map((cat) => (
-          <Link key={cat.slug} href={`/shop/${cat.slug}`} className="group relative block aspect-[3/4] overflow-hidden bg-gray-50">
+          <Link key={cat.slug} href={`/shop/${cat.slug}`} className="group relative block aspect-[3/4] w-[75vw] sm:w-full max-w-[320px] md:max-w-none overflow-hidden bg-gray-50">
             <img
               src={cat.image_url || "https://images.unsplash.com/photo-1603252109303-2751441dd157?w=600&q=80"}
               alt={cat.name}
@@ -37,3 +37,4 @@ export default async function CategoryGrid() {
     </div>
   );
 }
+

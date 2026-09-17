@@ -162,6 +162,16 @@ export async function updateProductStatus(id: string, status: "draft" | "active"
   return { success: true };
 }
 
+export async function toggleSpecialOffer(id: string, is_featured: boolean) {
+  const supabase = await requireAdmin();
+  const { error } = await supabase.from("products").update({ is_featured }).eq("id", id);
+  if (error) return { success: false, error: error.message };
+  revalidatePath("/manager-gora/products");
+  revalidatePath("/offers");
+  revalidatePath("/");
+  return { success: true };
+}
+
 export async function deleteProduct(id: string) {
   const supabase = await requireAdmin();
   // Cascade deletes variants + images via FK
@@ -195,3 +205,4 @@ export async function upsertStorefrontComponent(component_type: string, config: 
   revalidatePath("/manager-gora/storefront");
   return { success: true };
 }
+

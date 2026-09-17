@@ -121,10 +121,10 @@ export default function ProductForm({
           onClick={handleAddToCart}
           disabled={isOutOfStock || !currentVariant}
           className={`flex-1 font-bold tracking-widest text-[13px] transition-colors ${
-            isOutOfStock || !currentVariant ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-[#8c8c8c] hover:bg-gray-500 text-white cursor-pointer"
+            isOutOfStock || !currentVariant ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-black hover:bg-gray-800 text-white cursor-pointer"
           }`}
         >
-          {isOutOfStock ? "OUT OF STOCK" : "ADD TO CART"}
+          {!currentVariant ? "UNAVAILABLE" : isOutOfStock ? "OUT OF STOCK" : "ADD TO CART"}
         </button>
       </div>
 

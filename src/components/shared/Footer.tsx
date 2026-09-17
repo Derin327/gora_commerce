@@ -18,12 +18,30 @@ const InstagramIcon = () => (
   <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12,5.556c-3.559,0-6.444,2.886-6.444,6.444S8.441,18.444,12,18.444c3.559,0,6.444-2.886,6.444-6.444S15.559,5.556,12,5.556z M12,16.275c-2.361,0-4.275-1.915-4.275-4.275S9.639,7.725,12,7.725c2.361,0,4.275,1.915,4.275,4.275S14.361,16.275,12,16.275z"/><path d="M17.848,4.686c-0.796,0-1.442,0.647-1.442,1.442s0.647,1.442,1.442,1.442S19.29,6.924,19.29,6.128S18.644,4.686,17.848,4.686z"/><path d="M19.982,5.773c-0.174-1.295-0.612-2.348-1.554-3.289c-0.941-0.941-1.994-1.38-3.289-1.554c-1.332-0.18-5.328-0.18-6.66,0C7.184,1.104,6.13,1.543,5.19,2.484C4.248,3.425,3.81,4.478,3.636,5.773c-0.18,1.332-0.18,5.328,0,6.66c0.174,1.295,0.612,2.348,1.554,3.289c0.941,0.941,1.994,1.38,3.289,1.554c1.332,0.18,5.328,0.18,6.66,0c1.295-0.174,2.348-0.612,3.289-1.554c0.941-0.941,1.38-1.994,1.554-3.289C20.162,11.101,20.162,7.105,19.982,5.773z M17.917,14.62c-0.297,0.738-0.871,1.312-1.609,1.609c-1.127,0.449-3.792,0.345-4.308,0.345s-3.181,0.104-4.308-0.345c-0.738-0.297-1.312-0.871-1.609-1.609C5.634,13.493,5.738,10.828,5.738,10c0-0.828-0.104-3.493,0.345-4.62c0.297-0.738,0.871-1.312,1.609-1.609C8.819,3.322,11.484,3.426,12,3.426s3.181-0.104,4.308,0.345c0.738,0.297,1.312,0.871,1.609,1.609C18.366,6.507,18.262,9.172,18.262,10C18.262,10.828,18.366,13.493,17.917,14.62z"/></svg>
 );
 
-export default function Footer() {
+export default function Footer({ config }: { config?: any }) {
   const pathname = usePathname();
   
   if (pathname.startsWith("/manager-gora")) {
     return null;
   }
+
+  const stores = config?.stores || [
+    { name: "Kanchipuram" },
+    { name: "Trichy Thillai Nagar" },
+    { name: "Cuddalore" },
+    { name: "Pondicherry MG Road" },
+    { name: "Coimbatore Saibaba Colony" },
+    { name: "Coimbatore Lakshmi Mill" },
+    { name: "Kumbakonam" },
+    { name: "Erode" },
+    { name: "Salem" },
+  ];
+
+  const help = config?.help || {
+    address: "No 378, Mahatma Gandhi Road,\nNext to Petit Canal Street,\nPondicherry - 605001.",
+    phones: ["(+91) 90036 35574", "(+91) 77080 16139", "(+91) 99407 37575"],
+    email: "gora.clothing@gmail.com"
+  };
 
   return (
     <footer className="w-full bg-white border-t border-gray-100">
@@ -62,19 +80,19 @@ export default function Footer() {
           </p>
         </div>
 
-        {/* Our Stores */}
+                {/* Our Stores */}
         <div className="md:col-span-4 lg:col-span-2">
           <h4 className="font-bold text-black mb-6 text-sm">Our Stores</h4>
           <ul className="space-y-4 text-sm text-gray-500">
-            <li><Link href="#" className="hover:text-black transition-colors">Kanchipuram</Link></li>
-            <li><Link href="#" className="hover:text-black transition-colors">Trichy Thillai Nagar</Link></li>
-            <li><Link href="#" className="hover:text-black transition-colors">Cuddalore</Link></li>
-            <li><Link href="#" className="hover:text-black transition-colors">Pondicherry MG Road</Link></li>
-            <li><Link href="#" className="hover:text-black transition-colors">Coimbatore Saibaba Colony</Link></li>
-            <li><Link href="#" className="hover:text-black transition-colors">Coimbatore Lakshmi Mill</Link></li>
-            <li><Link href="#" className="hover:text-black transition-colors">Kumbakonam</Link></li>
-            <li><Link href="#" className="hover:text-black transition-colors">Erode</Link></li>
-            <li><Link href="#" className="hover:text-black transition-colors">Salem</Link></li>
+            {stores.map((store: any, idx: number) => (
+              <li key={idx}>
+                {store.url ? (
+                  <Link href={store.url} target="_blank" rel="noopener noreferrer" className="hover:text-black transition-colors">{store.name}</Link>
+                ) : (
+                  <span className="hover:text-black transition-colors cursor-default">{store.name}</span>
+                )}
+              </li>
+            ))}
           </ul>
         </div>
 
@@ -91,30 +109,28 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* Help & Support */}
+                {/* Help & Support */}
         <div className="md:col-span-4 lg:col-span-3">
           <h4 className="font-bold text-black mb-6 text-sm">Help & Support</h4>
           <ul className="space-y-5 text-sm text-gray-500">
-            <li className="flex items-start gap-3">
-              <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              <span>No 378, Mahatma Gandhi Road,<br/>Next to Petit Canal Street,<br/>Pondicherry — 605001.</span>
-            </li>
-            <li className="flex items-center gap-3">
-              <Phone className="w-4 h-4 flex-shrink-0" />
-              <span>(+91) 90036 35574</span>
-            </li>
-            <li className="flex items-center gap-3">
-              <Phone className="w-4 h-4 flex-shrink-0" />
-              <span>(+91) 77080 16139</span>
-            </li>
-            <li className="flex items-center gap-3">
-              <Phone className="w-4 h-4 flex-shrink-0" />
-              <span>(+91) 99407 37575</span>
-            </li>
-            <li className="flex items-center gap-3">
-              <Mail className="w-4 h-4 flex-shrink-0" />
-              <span>gora.clothing@gmail.com</span>
-            </li>
+            {help.address && (
+              <li className="flex items-start gap-3">
+                <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <span className="whitespace-pre-line">{help.address}</span>
+              </li>
+            )}
+            {(help.phones || []).map((phone: string, idx: number) => (
+              <li key={idx} className="flex items-center gap-3">
+                <Phone className="w-4 h-4 flex-shrink-0" />
+                <span>{phone}</span>
+              </li>
+            ))}
+            {help.email && (
+              <li className="flex items-center gap-3">
+                <Mail className="w-4 h-4 flex-shrink-0" />
+                <span>{help.email}</span>
+              </li>
+            )}
           </ul>
         </div>
       </div>
@@ -145,3 +161,4 @@ export default function Footer() {
     </footer>
   );
 }
+

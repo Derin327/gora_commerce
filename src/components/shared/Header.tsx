@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { useEffect, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
 import CartDrawer from "./CartDrawer";
 import FilterDrawer from "./FilterDrawer";
 
@@ -32,16 +33,27 @@ const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M20.283 12.256c0-.828-.07-1.616-.217-2.376H12v4.444h4.743c-.22 1.5-1.127 2.775-2.43 3.635v2.996h3.916c2.29-2.096 3.616-5.183 3.616-8.7z"/><path d="M12 20.67c2.327 0 4.28-.76 5.706-2.064l-3.916-2.996c-.773.514-1.757.818-2.79.818-2.146 0-3.963-1.44-4.61-3.376H2.33v3.084C4.05 19.537 7.747 20.67 12 20.67z"/><path d="M7.39 13.052c-.17-.506-.264-1.04-.264-1.59 0-.55.094-1.084.264-1.59V6.788H2.33a8.966 8.966 0 0 0 0 8.324l5.06-3.06z"/><path d="M12 6.315c1.26 0 2.39.428 3.284 1.272l2.45-2.43C16.275 3.738 14.32 3 12 3 7.746 3 4.05 5.394 2.33 8.788l5.06 3.084c.646-1.936 2.464-3.376 4.61-3.376z"/></svg>
 );
 
-export default function Header() {
+export default function Header({ config }: { config?: any }) {
   const pathname = usePathname();
   const router = useRouter();
   const { setIsOpen, items } = useCartStore();
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
-  useEffect(() => setMounted(true), []);
 
   if (pathname.startsWith("/manager-gora")) {
     return null;
@@ -64,14 +76,28 @@ export default function Header() {
         <div className="w-full bg-[#1a1a1a] text-white py-2.5 px-4 md:px-8">
           <div className="max-w-[1400px] mx-auto flex justify-between items-center text-[11px] uppercase font-semibold tracking-wider">
             <div>
-              Special Offer: Enjoy 40% OFF on Two Hot-Selling Products!{" "}
-              <Link href="/offers" className="underline hover:text-gray-300 ml-1">SHOP NOW</Link>
+              {config?.text || "Special Offer: Enjoy 40% OFF on Two Hot-Selling Products!"}{" "}
+              <Link href={config?.linkUrl || "/offers"} className="underline hover:text-gray-300 ml-1">
+                {config?.linkText || "SHOP NOW"}
+              </Link>
             </div>
             <div className="hidden md:flex items-center gap-5">
-              <Link href="https://instagram.com" className="hover:text-gray-400"><InstagramIcon /></Link>
-              <Link href="https://facebook.com" className="hover:text-gray-400"><FacebookIcon /></Link>
-              <Link href="https://youtube.com" className="hover:text-gray-400"><YoutubeIcon /></Link>
-              <Link href="https://google.com" className="hover:text-gray-400"><GoogleIcon /></Link>
+              {config?.socials?.instagram && (
+                <Link href={config.socials.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-gray-400"><InstagramIcon /></Link>
+              )}
+              {config?.socials?.facebook && (
+                <Link href={config.socials.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-gray-400"><FacebookIcon /></Link>
+              )}
+              {config?.socials?.youtube && (
+                <Link href={config.socials.youtube} target="_blank" rel="noopener noreferrer" className="hover:text-gray-400"><YoutubeIcon /></Link>
+              )}
+              {(!config?.socials) && (
+                <>
+                  <Link href="https://instagram.com" className="hover:text-gray-400"><InstagramIcon /></Link>
+                  <Link href="https://facebook.com" className="hover:text-gray-400"><FacebookIcon /></Link>
+                  <Link href="https://youtube.com" className="hover:text-gray-400"><YoutubeIcon /></Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -112,9 +138,15 @@ export default function Header() {
 
             {/* Right Actions */}
             <div className="flex items-center gap-5 md:gap-8 justify-end w-[80px] md:w-[300px]">
-              <Link href="/login" className="hidden lg:block text-xs font-bold uppercase tracking-widest hover:text-[#e32c2b] transition-colors">
-                Login
-              </Link>
+              {user ? (
+                <Link href="/account" className="hidden lg:block text-xs font-bold uppercase tracking-widest hover:text-[#e32c2b] transition-colors">
+                  Account
+                </Link>
+              ) : (
+                <Link href="/login" className="hidden lg:block text-xs font-bold uppercase tracking-widest hover:text-[#e32c2b] transition-colors">
+                  Login
+                </Link>
+              )}
               
               <button className="hidden sm:block relative hover:text-[#e32c2b] transition-colors">
                 <Heart className="w-6 h-6 stroke-[1.5]" />
@@ -229,7 +261,11 @@ export default function Header() {
               <Link href="/shop/shirts" onClick={() => setIsMobileMenuOpen(false)} className="text-black hover:text-[#e32c2b] transition-colors">Shirts</Link>
               <Link href="/shop/accessories" onClick={() => setIsMobileMenuOpen(false)} className="text-black hover:text-[#e32c2b] transition-colors">Accessories</Link>
               <hr className="border-gray-100" />
-              <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="text-black hover:text-[#e32c2b] transition-colors">Login / Register</Link>
+              {user ? (
+                <Link href="/account" onClick={() => setIsMobileMenuOpen(false)} className="text-black hover:text-[#e32c2b] transition-colors">My Account</Link>
+              ) : (
+                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="text-black hover:text-[#e32c2b] transition-colors">Login / Register</Link>
+              )}
             </div>
           </div>
         </div>

@@ -1,90 +1,17 @@
 import ProductCard from "@/components/shared/ProductCard";
+import { searchProducts } from "@/lib/data/storefront";
 
-export default function SearchPage({ searchParams }: { searchParams: { q?: string; cat?: string; color?: string; size?: string } }) {
+export default async function SearchPage({ searchParams }: { searchParams: { q?: string; cat?: string; color?: string; size?: string } }) {
   const query = searchParams.q || "";
+  const catParam = searchParams.cat || "";
+  const colorParam = searchParams.color || "";
+  const sizeParam = searchParams.size || "";
 
-  // Mock global database of all products.
-  // When we build the backend, this will be a search query sent to Supabase
-  // like: supabase.from('products').select('*').ilike('name', `%${query}%`)
-  const allProducts = [
-    {
-      id: "p1",
-      name: "Graffiti Wash Drop-Shoulder Shirt",
-      category: "shirts",
-      originalPrice: 1599,
-      discountedPrice: 990,
-      discountPercentage: 27,
-      imageUrl: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80",
-      variants: [],
-    },
-    {
-      id: "p2",
-      name: "Classic Overdyed Checkered Shirt",
-      category: "shirts",
-      originalPrice: 2199,
-      discountedPrice: 1499,
-      discountPercentage: 31,
-      imageUrl: "https://images.unsplash.com/photo-1603252109303-2751441dd157?w=600&q=80",
-      variants: [],
-    },
-    {
-      id: "p3",
-      name: "The Zephyr Plus-Size Linen Pant",
-      category: "bottoms",
-      originalPrice: 1319,
-      discountedPrice: 989,
-      discountPercentage: 25,
-      imageUrl: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600&q=80",
-      variants: [],
-    },
-    {
-      id: "p4",
-      name: "Vintage Momfit Jean",
-      category: "bottoms",
-      originalPrice: 1399,
-      discountedPrice: 799,
-      discountPercentage: 43,
-      imageUrl: "https://images.unsplash.com/photo-1582552938357-32b906df40cb?w=600&q=80",
-      variants: [],
-    },
-    {
-      id: "p5",
-      name: "Italian Polo Fit Pants",
-      category: "bottoms",
-      originalPrice: 666,
-      discountedPrice: 499,
-      discountPercentage: 25,
-      imageUrl: "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=600&q=80",
-      variants: [],
-    },
-    {
-      id: "p6",
-      name: "Classic Heavyweight Hoodie",
-      category: "hoodies",
-      originalPrice: 1999,
-      discountedPrice: 1299,
-      discountPercentage: 35,
-      imageUrl: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=600&q=80",
-      variants: [],
-    },
-    {
-      id: "p7",
-      name: "Silver Cuban Chain",
-      category: "accessories",
-      originalPrice: 999,
-      discountedPrice: 599,
-      discountPercentage: 40,
-      imageUrl: "https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=600&q=80",
-      variants: [],
-    }
-  ];
+  const categories = catParam ? catParam.split(',').filter(Boolean) : [];
+  const colors = colorParam ? colorParam.split(',').filter(Boolean) : [];
+  const sizes = sizeParam ? sizeParam.split(',').filter(Boolean) : [];
 
-  // Filter products by searching the name or category
-  const lowerQuery = query.toLowerCase();
-  const searchResults = query ? allProducts.filter(p => 
-    p.name.toLowerCase().includes(lowerQuery) || 
-    p.category.toLowerCase().includes(lowerQuery)
-  ) : [];
+  const searchResults = await searchProducts({ query, categories, colors, sizes });
 
   return (
     <main className="min-h-screen bg-white">
@@ -98,33 +25,25 @@ export default function SearchPage({ searchParams }: { searchParams: { q?: strin
           </p>
         ) : (
           <p className="text-center text-gray-500 mb-12 uppercase tracking-widest text-sm">
-            Please enter a search term
+            {searchResults.length} Products Found
           </p>
         )}
 
         {searchResults.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {searchResults.map(prod => (
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+            {searchResults.map((prod: any) => (
               <ProductCard key={prod.id} {...prod} />
             ))}
           </div>
         ) : (
-          (query || searchParams.cat || searchParams.color || searchParams.size) && (
-            <div className="text-center py-24 bg-gray-50 border border-dashed border-gray-200 mt-8 rounded-lg">
-              <h2 className="text-xl font-bold text-gray-900 uppercase tracking-widest mb-4">
-                No exact matches found.
-              </h2>
-              {/* This is a frontend placeholder showing how the backend will handle missing filters */}
-              <p className="text-gray-500 font-medium">
-                We couldn't find exactly what you're looking for with these specific filters.
-              </p>
-              {searchParams.cat && searchParams.color && (
-                <p className="mt-4 text-[#e32c2b] font-bold">
-                  Suggestion: We have 12 {searchParams.cat} available in other colors! Try removing the "{searchParams.color}" filter.
-                </p>
-              )}
-            </div>
-          )
+          <div className="text-center py-24 bg-gray-50 border border-dashed border-gray-200 mt-8 rounded-lg">
+            <h2 className="text-xl font-bold text-gray-900 uppercase tracking-widest mb-4">
+              No exact matches found.
+            </h2>
+            <p className="text-gray-500 font-medium max-w-md mx-auto">
+              We couldn't find exactly what you're looking for with these specific filters. Try adjusting your search query or removing some filters.
+            </p>
+          </div>
         )}
       </div>
     </main>

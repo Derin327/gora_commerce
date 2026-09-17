@@ -37,14 +37,10 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // 3. Efficient Server-Side JWT Verification
-  // getSession() parses and validates the JWT from cookies locally without a network request.
-  // This removes the 300ms+ network penalty of getUser() on every single click.
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  const user = session?.user;
+  // 3. Secure Server-Side JWT Verification
+  // We use getUser() here for production-grade security on admin routes
+  // to ensure the token is authentic and valid with the Supabase Auth server.
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
     const url = request.nextUrl.clone();
@@ -66,7 +62,7 @@ export async function updateSession(request: NextRequest) {
     if (!isAdmin) {
       // Authenticated but unauthorized (customer) — redirect away
       const url = request.nextUrl.clone();
-      url.pathname = "/";
+      url.pathname = "/admin-login";
       return NextResponse.redirect(url);
     }
     
@@ -76,5 +72,6 @@ export async function updateSession(request: NextRequest) {
 
   return supabaseResponse;
 }
+
 
 

@@ -67,7 +67,7 @@ export default async function Home() {
       <div className="max-w-7xl mx-auto my-12">
         <SwipeableCarousel title="New Arrivals">
           {newArrivals.map((product) => (
-            <div key={product.id} className="w-[75vw] sm:w-[45vw] md:w-[300px] flex-none snap-start">
+            <div key={product.id} className="w-[45vw] sm:w-[45vw] md:w-[300px] flex-none snap-start">
               <ProductCard {...product} />
             </div>
           ))}
@@ -78,7 +78,7 @@ export default async function Home() {
       <div className="max-w-7xl mx-auto my-12">
         <SwipeableCarousel title="Trending Now">
           {trendingProducts.map((product) => (
-            <div key={product.id} className="w-[75vw] sm:w-[45vw] md:w-[300px] flex-none snap-start">
+            <div key={product.id} className="w-[45vw] sm:w-[45vw] md:w-[300px] flex-none snap-start">
               <ProductCard {...product} />
             </div>
           ))}

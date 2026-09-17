@@ -156,7 +156,7 @@ export async function registerUser(formData: {
   const supabase = getSupabaseServer();
   const admin = getSupabaseAdmin();
 
-  // 1. Check username uniqueness before signing up
+  // 1. Check uniqueness before signing up
   const { data: existingUsername } = await admin
     .from("profiles")
     .select("id")
@@ -164,6 +164,22 @@ export async function registerUser(formData: {
     .single();
 
   if (existingUsername) return { success: false, error: "Username is already taken." };
+
+  const { data: existingEmail } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("email", formData.email)
+    .single();
+
+  if (existingEmail) return { success: false, error: "An account already exists with this email address." };
+
+  const { data: existingPhone } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("phone", formData.phone)
+    .single();
+
+  if (existingPhone) return { success: false, error: "An account already exists with this phone number." };
 
   // 2. Supabase signUp — this triggers email OTP/confirmation automatically
   const { data, error } = await supabase.auth.signUp({
@@ -269,4 +285,55 @@ export async function logoutUser() {
   const supabase = getSupabaseServer();
   await supabase.auth.signOut();
   redirect("/");
+}
+
+
+export async function updateUserProfile(formData: {
+  username: string;
+  phone: string;
+  address: string;
+  city: string;
+  pincode: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const supabase = getSupabaseServer();
+  const admin = getSupabaseAdmin();
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Not authenticated" };
+
+  // Check if username is taken by someone else
+  const { data: existingUsername } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("username", formData.username)
+    .neq("id", user.id)
+    .single();
+
+  if (existingUsername) return { success: false, error: "Username is already taken." };
+
+  // Check if phone is taken by someone else
+  const { data: existingPhone } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("phone", formData.phone)
+    .neq("id", user.id)
+    .single();
+
+  if (existingPhone) return { success: false, error: "Phone number is already associated with another account." };
+
+  const { error } = await admin
+    .from("profiles")
+    .update({
+      username: formData.username,
+      phone: formData.phone,
+      address: formData.address,
+      city: formData.city,
+      pincode: formData.pincode,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", user.id);
+
+  if (error) return { success: false, error: error.message };
+
+  return { success: true };
 }

@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
@@ -28,8 +28,8 @@ export async function createProductAction(formData: FormData) {
   );
 
   // 2. Security: Verify Admin Role natively on the server
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session || session.user.email !== process.env.ADMIN_EMAIL) {
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user || user.email !== process.env.ADMIN_EMAIL) {
     throw new Error("Unauthorized: Admin privileges required.");
   }
 
@@ -94,6 +94,19 @@ export async function createProductAction(formData: FormData) {
 
     if (error) throw new Error(error.message);
 
+    // Save subcategory if present
+    const subcategory = formData.get("subcategory");
+    if (subcategory) {
+      await supabase.from('products').update({ subcategory: subcategory.toString() }).eq('id', productId);
+    }
+
+      // Update color variants if any
+      for (const img of imagesMeta) {
+        if (img.color) {
+          await supabase.from('product_images').update({ color: img.color }).eq('product_id', productId).eq('storage_key', img.storage_key);
+        }
+      }
+
     return { success: true, productId };
 
   } catch (error: any) {
@@ -108,3 +121,5 @@ export async function createProductAction(formData: FormData) {
     return { success: false, error: error.message || "Failed to create product" };
   }
 }
+
+

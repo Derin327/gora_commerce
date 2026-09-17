@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
-import { Plus, Search, Pencil, Trash2, Eye, EyeOff, Loader2, Package, ChevronUp, ChevronDown } from "lucide-react";
-import { getAdminProducts, getCategories, updateProductStatus, deleteProduct } from "@/lib/actions/admin-crud";
+import { Plus, Search, Pencil, Trash2, Eye, EyeOff, Loader2, Package, ChevronUp, ChevronDown, Tag } from "lucide-react";
+import { getAdminProducts, getCategories, updateProductStatus, deleteProduct, toggleSpecialOffer } from "@/lib/actions/admin-crud";
 
 const STATUS_STYLES: Record<string, string> = {
   active:   "bg-green-100 text-green-700",
@@ -45,6 +45,11 @@ export default function AdminProductsPage() {
   const handleStatusToggle = async (id: string, current: string) => {
     const next = current === "active" ? "draft" : "active";
     await updateProductStatus(id, next as any);
+    load();
+  };
+
+  const handleSpecialOfferToggle = async (id: string, current: boolean) => {
+    await toggleSpecialOffer(id, !current);
     load();
   };
 
@@ -126,7 +131,7 @@ export default function AdminProductsPage() {
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Category</th>
               <th className="px-4 py-3 text-right">Price</th>
-              <th className="px-4 py-3 text-center">Stock</th>
+              <th className="px-4 py-3 text-center">Stock</th><th className="px-4 py-3 text-center">Special Offer</th>
               <th className="px-4 py-3 text-center">Actions</th>
             </tr>
           </thead>
@@ -184,11 +189,20 @@ export default function AdminProductsPage() {
                         <p className="text-xs text-gray-400 line-through">Rs.{p.compare_at_price}</p>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className={`text-sm font-bold ${stock === 0 ? "text-red-500" : stock < 5 ? "text-orange-500" : "text-gray-700"}`}>
-                        {stock}
-                      </span>
-                    </td>
+                  <td className="px-4 py-3 text-center">
+                    <span className={`text-sm font-bold ${stock === 0 ? "text-red-500" : stock < 5 ? "text-orange-500" : "text-gray-700"}`}>
+                      {stock}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <button
+                      onClick={() => handleSpecialOfferToggle(p.id, p.is_featured)}
+                      title={p.is_featured ? "Remove from Special Offers" : "Mark as Special Offer"}
+                      className={`p-2 rounded-md transition-colors ${p.is_featured ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' : 'text-gray-400 hover:text-black hover:bg-gray-100'}`}
+                    >
+                      <Tag className="w-4 h-4" />
+                    </button>
+                  </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-1">
                         {/* Toggle active/draft */}
@@ -246,3 +260,4 @@ export default function AdminProductsPage() {
     </div>
   );
 }
+

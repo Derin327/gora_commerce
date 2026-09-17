@@ -79,12 +79,17 @@ export default function AdminCategoriesPage() {
       formData.append("file", croppedFile);
       const res = await uploadMediaAction(formData);
       if (res.success && "url" in res && res.url) {
-        setForm(f => ({ ...f, image_url: res.url as string }));
+        const uploadedUrl = res.url as string;
+        setForm({ ...form, image_url: uploadedUrl });
+        alert("Upload successful!\nURL: " + uploadedUrl);
       } else {
-        setError(("error" in res && res.error) ? res.error : "Failed to upload image.");
+        const errMsg = ("error" in res && res.error) ? res.error : "Failed to upload image.";
+        setError(errMsg);
+        alert("Upload Error: " + errMsg);
       }
     } catch (err: any) {
       setError(err.message || "Upload failed");
+      alert("Upload Exception: " + err.message);
     } finally {
       setIsUploading(false);
       if (cropImageSrc) URL.revokeObjectURL(cropImageSrc);
@@ -342,5 +347,6 @@ export default function AdminCategoriesPage() {
     </div>
   );
 }
+
 
 
