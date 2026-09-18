@@ -14,8 +14,10 @@ import {
   SlidersHorizontal
 } from "lucide-react";
 import { useCartStore } from "@/lib/store";
+import { useWishlistStore } from "@/lib/wishlist-store";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { getUserWishlistIds } from "@/lib/actions/wishlist-actions";
 import CartDrawer from "./CartDrawer";
 import FilterDrawer from "./FilterDrawer";
 
@@ -37,6 +39,7 @@ export default function Header({ config }: { config?: any }) {
   const pathname = usePathname();
   const router = useRouter();
   const { setIsOpen, items } = useCartStore();
+  const { wishlistIds, setWishlistIds } = useWishlistStore();
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -44,11 +47,24 @@ export default function Header({ config }: { config?: any }) {
   useEffect(() => {
     setMounted(true);
     const supabase = createClient();
+    
+    const loadData = async (sessionUser: any) => {
+      setUser(sessionUser);
+      if (sessionUser) {
+        const res = await getUserWishlistIds();
+        if (res.success) {
+          setWishlistIds(res.ids);
+        }
+      } else {
+        setWishlistIds([]);
+      }
+    };
+
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user || null);
+      loadData(session?.user || null);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
+      loadData(session?.user || null);
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -131,8 +147,12 @@ export default function Header({ config }: { config?: any }) {
             
             {/* Logo (Center) */}
             <div className="flex-1 text-center flex justify-center">
-              <Link href="/" className="inline-block text-4xl md:text-[2.75rem] font-black tracking-tighter text-black leading-none" style={{ fontFamily: "Georgia, serif" }}>
-                GORA
+              <Link href="/" className="inline-block flex justify-center items-center h-16 md:h-20">
+                <img 
+                  src={config?.logoUrl || "/gora-logo.png"} 
+                  alt="GORA Logo" 
+                  className={`h-full w-auto object-contain ${config?.invertLogo ? "invert" : ""}`}
+                />
               </Link>
             </div>
 
@@ -148,10 +168,12 @@ export default function Header({ config }: { config?: any }) {
                 </Link>
               )}
               
-              <button className="hidden sm:block relative hover:text-[#e32c2b] transition-colors">
+              <Link href="/wishlist" className="hidden sm:block relative hover:text-[#e32c2b] transition-colors">
                 <Heart className="w-6 h-6 stroke-[1.5]" />
-                <span className="absolute -top-1.5 -right-2 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#1a1a1a] text-[10px] font-bold text-white">0</span>
-              </button>
+                <span className="absolute -top-1.5 -right-2 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#1a1a1a] text-[10px] font-bold text-white">
+                  {mounted ? wishlistIds.length : 0}
+                </span>
+              </Link>
 
               <button className="flex items-center gap-3 hover:text-[#e32c2b] transition-colors" onClick={() => setIsOpen(true)}>
                 <div className="relative">
@@ -214,7 +236,8 @@ export default function Header({ config }: { config?: any }) {
                 </span>
                 <div className="absolute top-full left-1/2 -translate-x-1/2 w-48 bg-white shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 flex flex-col z-50">
                   <Link href="/shop/shirts/oversized" className="px-5 py-3 border-b border-gray-50 hover:bg-gray-50 hover:text-[#e32c2b] text-black text-center">Oversized</Link>
-                  <Link href="/shop/shirts/casual" className="px-5 py-3 hover:bg-gray-50 hover:text-[#e32c2b] text-black text-center">Casual</Link>
+                  <Link href="/shop/shirts/casual" className="px-5 py-3 border-b border-gray-50 hover:bg-gray-50 hover:text-[#e32c2b] text-black text-center">Casual</Link>
+                  <Link href="/shop/shirts/formals" className="px-5 py-3 hover:bg-gray-50 hover:text-[#e32c2b] text-black text-center">Formals</Link>
                 </div>
               </div>
             </div>

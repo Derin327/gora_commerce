@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useCartStore } from "@/lib/store";
-import { BarChart2, Share2, ShieldCheck } from "lucide-react";
+import { ShieldCheck, Ruler } from "lucide-react";
+import SizeChartModal from "./SizeChartModal";
+import WishlistButton from "./WishlistButton";
 
 interface ProductFormProps {
   product: {
@@ -16,7 +18,8 @@ interface ProductFormProps {
   selectedSize: string;
   onColorSelect: (color: string) => void;
   onSizeSelect: (size: string) => void;
-  currentVariant: any; // Contains price, stock, id
+  currentVariant: any;
+  category?: string; // used to determine which size chart to show
 }
 
 export default function ProductForm({ 
@@ -27,11 +30,13 @@ export default function ProductForm({
   selectedSize, 
   onColorSelect, 
   onSizeSelect,
-  currentVariant
+  currentVariant,
+  category = "shirts"
 }: ProductFormProps) {
   
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
+  const [isSizeChartOpen, setIsSizeChartOpen] = useState(false);
   
   const addItem = useCartStore((state) => state.addItem);
 
@@ -54,6 +59,7 @@ export default function ProductForm({
   };
 
   return (
+    <>
     <div className="flex flex-col gap-6">
       {/* Colors */}
       {availableColors.length > 0 && (
@@ -84,7 +90,17 @@ export default function ProductForm({
       {/* Sizes */}
       {availableSizes.length > 0 && (
         <div>
-          <span className="block text-[13px] font-bold text-black mb-3">Size</span>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[13px] font-bold text-black">Size</span>
+            <button
+              type="button"
+              onClick={() => setIsSizeChartOpen(true)}
+              className="flex items-center gap-1.5 text-[11px] font-semibold text-gray-500 hover:text-black transition-colors uppercase tracking-wider border-b border-dashed border-gray-400 hover:border-black pb-0.5"
+            >
+              <Ruler className="w-3 h-3" />
+              Size Chart
+            </button>
+          </div>
           <div className="flex flex-wrap gap-2">
             {availableSizes.map(size => (
               <button
@@ -126,16 +142,7 @@ export default function ProductForm({
         >
           {!currentVariant ? "UNAVAILABLE" : isOutOfStock ? "OUT OF STOCK" : "ADD TO CART"}
         </button>
-      </div>
-
-      {/* Compare & Share */}
-      <div className="flex items-center gap-6 mt-2 border-b border-gray-100 pb-6">
-        <button type="button" className="flex items-center gap-2 text-xs font-bold tracking-widest text-black hover:text-gray-500 transition-colors">
-          <BarChart2 className="w-4 h-4" /> COMPARE
-        </button>
-        <button type="button" className="flex items-center gap-2 text-xs font-bold tracking-widest text-black hover:text-gray-500 transition-colors">
-          <Share2 className="w-4 h-4" /> SHARE
-        </button>
+        <WishlistButton productId={product.id} className="w-12 !rounded-none flex items-center justify-center border border-gray-200" />
       </div>
 
       {/* Delivery Info */}
@@ -201,5 +208,13 @@ export default function ProductForm({
         </div>
       </div>
     </div>
+
+    {/* Size Chart Modal */}
+    <SizeChartModal
+      isOpen={isSizeChartOpen}
+      onClose={() => setIsSizeChartOpen(false)}
+      category={category}
+    />
+    </>
   );
 }

@@ -56,20 +56,35 @@ const fallbackProducts = [
 
 export const revalidate = 60;
 
-export default async function CategoryPage({ params, searchParams }: { params: { category: string }, searchParams: { subcategory?: string } }) {
-  const categorySlug = decodeURIComponent(params.category).toLowerCase();
-  const subcategory = searchParams?.subcategory;
+export default async function CategoryPage({ params, searchParams }: { params: { slug: string[] }, searchParams: { subcategory?: string } }) {
+  // slug[0] is the category, slug[1] is the subcategory (if URL is /shop/bottoms/jeans)
+  const categorySlug = decodeURIComponent(params.slug[0]).toLowerCase();
+  
+  // Accept subcategory either from the URL path or from search params
+  const subcategory = params.slug[1] 
+    ? decodeURIComponent(params.slug[1]).toLowerCase() 
+    : searchParams?.subcategory;
   
   const { category, products: dbProducts } = await getProductsByCategory(categorySlug, subcategory);
   
   const baseTitle = category?.name || categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1);
-  const categoryTitle = subcategory ? `${subcategory} ${baseTitle}` : baseTitle;
+  
+  // Format subcategory for title
+  const formattedSubcategory = subcategory ? subcategory.charAt(0).toUpperCase() + subcategory.slice(1) : "";
+  const categoryTitle = formattedSubcategory ? `${formattedSubcategory} ${baseTitle}` : baseTitle;
+  
   const categoryDesc = category?.description || `Explore our collection of premium ${categoryTitle}. Every piece in this category is carefully curated for quality and style.`;
 
   // Fallback to mock if database has no products for this category yet
-  const displayProducts = dbProducts.length > 0
-    ? dbProducts
-    : fallbackProducts.filter(p => p.category.toLowerCase() === categorySlug);
+  // If subcategory is requested but no mock products match perfectly, we might just show an empty list instead of mocking it wrongly, but let's stick to the current fallback.
+  let displayProducts: any[] = dbProducts;
+  if (dbProducts.length === 0) {
+    displayProducts = fallbackProducts.filter(p => p.category.toLowerCase() === categorySlug);
+    // If a specific subcategory is selected, don't show general fallback products (which don't have subcategory data)
+    if (subcategory) {
+      displayProducts = [];
+    }
+  }
 
   return (
     <main className="min-h-screen bg-white">
@@ -100,7 +115,7 @@ export default async function CategoryPage({ params, searchParams }: { params: {
         ) : (
           <div className="text-center py-24">
             <h2 className="text-xl font-medium text-gray-500 uppercase tracking-widest">
-              No products found in this category
+              There is no product in this category
             </h2>
           </div>
         )}
@@ -108,4 +123,3 @@ export default async function CategoryPage({ params, searchParams }: { params: {
     </main>
   );
 }
-

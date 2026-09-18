@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import ProductForm from "@/components/shared/ProductForm";
 import ProductCard from "@/components/shared/ProductCard";
 import { createClient } from "@/utils/supabase/client";
-import { Loader2, X, ZoomIn, ZoomOut, MousePointer2 } from "lucide-react";
+import { Loader2, X, ZoomIn, ZoomOut, MousePointer2, BarChart2, Share2 } from "lucide-react";
+import { useCompareStore } from "@/lib/store";
 
 // Centralized mock database for fallback
 const mockDatabase = [
@@ -73,6 +74,41 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   const [zoomScale, setZoomScale] = useState(1);
+  const [compareToast, setCompareToast] = useState<string | null>(null);
+  const { addItem: addCompare, removeItem: removeCompare, hasItem } = useCompareStore();
+
+  const handleCompareToggle = () => {
+    if (!product) return;
+    if (hasItem(product.id)) {
+      removeCompare(product.id);
+      setCompareToast("Removed from comparison");
+    } else {
+      const success = addCompare({
+        id: product.id,
+        name: product.name,
+        imageUrl: selectedImage || product.images?.[0]?.url || "",
+        price: product.basePrice,
+        originalPrice: product.originalPrice,
+        category: product.category,
+      });
+      if (!success) {
+        setCompareToast("Max 3 products! Remove one to continue.");
+      } else {
+        setCompareToast("Added to comparison ✓");
+      }
+    }
+    setTimeout(() => setCompareToast(null), 2500);
+  };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({ title: product?.name, url: window.location.href });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      setCompareToast("Link copied!");
+      setTimeout(() => setCompareToast(null), 2000);
+    }
+  };
 
   useEffect(() => {
     async function loadProduct() {
@@ -334,16 +370,46 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
               {product.description}
             </p>
 
-            <ProductForm 
-              product={product} 
-              availableColors={availableColors as any[]}
-              availableSizes={availableSizes as string[]}
-              selectedColor={selectedColor}
-              selectedSize={selectedSize}
-              onColorSelect={handleColorChange}
-              onSizeSelect={setSelectedSize}
-              currentVariant={activeVariant}
-            />
+              <ProductForm 
+                product={product} 
+                availableColors={availableColors as any[]}
+                availableSizes={availableSizes as string[]}
+                selectedColor={selectedColor}
+                selectedSize={selectedSize}
+                onColorSelect={handleColorChange}
+                onSizeSelect={setSelectedSize}
+                currentVariant={activeVariant}
+                category={product.category}
+              />
+
+              {/* Compare + Share row */}
+              <div className="mt-4 flex items-center gap-4">
+                <button
+                  onClick={handleCompareToggle}
+                  className={`flex items-center gap-2 px-4 py-2.5 border text-sm font-semibold uppercase tracking-widest transition-all ${
+                    hasItem(product.id)
+                      ? "border-black bg-black text-white"
+                      : "border-gray-300 text-black hover:border-black"
+                  }`}
+                >
+                  <BarChart2 className="w-4 h-4" />
+                  {hasItem(product.id) ? "✓ Comparing" : "Compare"}
+                </button>
+                <button
+                  onClick={handleShare}
+                  className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 text-sm font-semibold uppercase tracking-widest hover:border-black transition-all text-black"
+                >
+                  <Share2 className="w-4 h-4" />
+                  Share
+                </button>
+              </div>
+
+              {/* Toast feedback */}
+              {compareToast && (
+                <div className="mt-2 text-xs font-semibold text-black bg-gray-50 border border-gray-200 px-3 py-2 rounded-sm">
+                  {compareToast}
+                </div>
+              )}
 
             {/* Accordion Details */}
             <div className="mt-12 border-t border-gray-100 divide-y divide-gray-100">

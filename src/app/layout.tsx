@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import ServerHeader from "@/components/shared/ServerHeader";
 import ServerFooter from "@/components/shared/ServerFooter";
+import CompareBar from "@/components/shared/CompareBar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,6 +25,7 @@ export default function RootLayout({
           {children}
         </div>
         <ServerFooter />
+        <CompareBar />
       </body>
     </html>
   );

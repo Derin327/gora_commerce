@@ -2,8 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Maximize2 } from "lucide-react";
+import { Maximize2, BarChart2 } from "lucide-react";
 import { useState } from "react";
+import { useCompareStore } from "@/lib/store";
+import WishlistButton from "@/components/shared/WishlistButton";
 
 export interface ProductCardProps {
   id: string;
@@ -25,6 +27,33 @@ export default function ProductCard({
   variants,
 }: ProductCardProps) {
   const [currentImage, setCurrentImage] = useState(imageUrl);
+  const [compareToast, setCompareToast] = useState<string | null>(null);
+  const { addItem: addCompare, removeItem: removeCompare, hasItem } = useCompareStore();
+  const isCompared = hasItem(id);
+
+  const handleCompareToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isCompared) {
+      removeCompare(id);
+      setCompareToast("Removed from comparison");
+    } else {
+      const success = addCompare({
+        id,
+        name,
+        imageUrl,
+        price: discountedPrice,
+        originalPrice,
+        discountPercentage,
+        variants,
+      });
+      if (!success) {
+        setCompareToast("Max 3 products allowed");
+      } else {
+        setCompareToast("Added to comparison");
+      }
+    }
+    setTimeout(() => setCompareToast(null), 2000);
+  };
 
   const displayVariants = variants ? variants.slice(0, 3) : [];
 
@@ -40,14 +69,38 @@ export default function ProductCard({
         </Link>
 
         {discountPercentage > 0 && (
-          <div className="absolute top-2 left-2 bg-black text-white px-1.5 py-0.5 text-xs font-semibold tracking-wider pointer-events-none">
+          <div className="absolute top-2 left-2 bg-black text-white px-1.5 py-0.5 text-xs font-semibold tracking-wider pointer-events-none z-10">
             -{discountPercentage}%
           </div>
         )}
 
-        <Link href={`/product/${id}`} className="absolute top-2 right-2 p-1.5 bg-white border border-transparent hover:border-black transition-colors">
+        <WishlistButton productId={id} className="absolute top-2 right-2 z-10" />
+
+        <Link href={`/product/${id}`} className="absolute top-2 right-12 p-1.5 bg-white border border-transparent hover:border-black transition-colors z-10 opacity-0 group-hover/image:opacity-100">
           <Maximize2 className="w-3.5 h-3.5 text-black" />
         </Link>
+
+        {/* Compare button - appears on hover */}
+        <button
+          onClick={handleCompareToggle}
+          className={`absolute bottom-0 left-0 right-0 flex items-center justify-center gap-1.5 py-2 text-xs font-bold uppercase tracking-wider transition-all duration-200 opacity-0 group-hover/image:opacity-100 translate-y-1 group-hover/image:translate-y-0 ${
+            isCompared 
+              ? "bg-black text-white" 
+              : "bg-white/95 text-black hover:bg-black hover:text-white border-t border-gray-200"
+          }`}
+        >
+          <BarChart2 className="w-3 h-3" />
+          {isCompared ? "✓ Comparing" : "Compare"}
+        </button>
+
+        {/* Toast notification */}
+        {compareToast && (
+          <div className="absolute inset-x-0 top-2 flex justify-center z-20 pointer-events-none">
+            <span className="bg-black/80 text-white text-[10px] font-semibold px-3 py-1 rounded-full">
+              {compareToast}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col items-center flex-grow px-1 text-center">

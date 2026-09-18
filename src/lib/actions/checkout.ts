@@ -148,13 +148,7 @@ export async function createOrder(data: {
     const { error: itemsError } = await admin.from("order_items").insert(itemsToInsert);
     if (itemsError) throw new Error(itemsError.message);
 
-    // 5. Decrement Stock securely
-    for (const item of finalOrderItems) {
-      const { data: variant } = await admin.from("product_variants").select("stock_quantity").eq("id", item.variant_id).single();
-      if (variant) {
-        await admin.from("product_variants").update({ stock_quantity: (variant.stock_quantity ?? 0) - item.quantity }).eq("id", item.variant_id);
-      }
-    }
+    // Removed stock decrement here because the user requested it to happen when the order is marked as Shipped from the admin dashboard instead of during checkout.
 
     return { success: true, orderId: order.id, orderNumber };
   } catch (error: any) {

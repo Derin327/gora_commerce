@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, Search, Bell, Layers, MonitorPlay } from "lucide-react";
 import { adminLogout } from "@/lib/actions/admin-auth";
+import NotificationBell from "@/components/admin/NotificationBell";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -83,10 +84,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           
           <div className="flex items-center gap-4">
-            <button className="p-2 text-gray-400 hover:text-black transition-colors relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            <NotificationBell />
             <div className="h-8 w-8 bg-black rounded-full flex items-center justify-center text-white font-bold text-sm">
               AD
             </div>

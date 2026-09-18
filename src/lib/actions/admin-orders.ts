@@ -34,6 +34,10 @@ export async function getAdminOrders() {
 
 export async function updateOrderStatus(orderId: string, status: string) {
   const admin = getSupabaseAdmin();
+  
+  // Get current order status before updating to prevent duplicate stock reduction
+  const { data: order } = await admin.from("orders").select("fulfillment_status").eq("id", orderId).single();
+  
   const { error } = await admin
     .from("orders")
     .update({ fulfillment_status: status })
@@ -42,5 +46,35 @@ export async function updateOrderStatus(orderId: string, status: string) {
   if (error) {
     return { success: false, error: error.message };
   }
+
+  // Deduct stock if the status is changed to "shipped" AND it wasn't already shipped or delivered
+  if (status === "shipped" && order && !["shipped", "delivered"].includes(order.fulfillment_status)) {
+    const { data: orderItems } = await admin.from("order_items").select("variant_id, quantity").eq("order_id", orderId);
+    if (orderItems) {
+      for (const item of orderItems) {
+        if (!item.variant_id) continue;
+        const { data: variant } = await admin.from("product_variants").select("stock_quantity").eq("id", item.variant_id).single();
+        if (variant) {
+          await admin.from("product_variants")
+            .update({ stock_quantity: Math.max(0, (variant.stock_quantity ?? 0) - item.quantity) })
+            .eq("id", item.variant_id);
+        }
+      }
+    }
+  }
+
   return { success: true };
+}
+
+export async function getPendingOrdersCount() {
+  const admin = getSupabaseAdmin();
+  const { count, error } = await admin
+    .from("orders")
+    .select("*", { count: "exact", head: true })
+    .in("fulfillment_status", ["pending", "processing"]);
+    
+  if (error) {
+    return 0;
+  }
+  return count || 0;
 }

@@ -60,3 +60,48 @@ export const useCartStore = create<CartStore>()(
     }
   )
 );
+
+// ── Compare Store ──────────────────────────────────────────────
+export interface CompareProduct {
+  id: string;
+  name: string;
+  imageUrl: string;
+  price: number;
+  originalPrice?: number;
+  discountPercentage?: number;
+  category?: string;
+  variants?: string[];
+  slug?: string;
+}
+
+interface CompareStore {
+  items: CompareProduct[];
+  isBarVisible: boolean;
+  addItem: (product: CompareProduct) => boolean; // returns false if max reached
+  removeItem: (id: string) => void;
+  clearAll: () => void;
+  hasItem: (id: string) => boolean;
+}
+
+export const useCompareStore = create<CompareStore>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      isBarVisible: false,
+      addItem: (product) => {
+        const items = get().items;
+        if (items.length >= 3) return false;       // hard cap at 3
+        if (items.find((i) => i.id === product.id)) return true; // already added
+        set({ items: [...items, product], isBarVisible: true });
+        return true;
+      },
+      removeItem: (id) => {
+        const newItems = get().items.filter((i) => i.id !== id);
+        set({ items: newItems, isBarVisible: newItems.length > 0 });
+      },
+      clearAll: () => set({ items: [], isBarVisible: false }),
+      hasItem: (id) => !!get().items.find((i) => i.id === id),
+    }),
+    { name: "gora-compare-storage" }
+  )
+);

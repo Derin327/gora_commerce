@@ -16,7 +16,8 @@ interface Component {
 const DEFAULT_COMPONENTS = [
   { component_type: "hero_banner", name: "Hero Banner", defaultConf: { heading: "", subheading: "", videoUrl: "", buttonText: "", buttonLink: "" } },
   { component_type: "promo_block", name: "Promo Block", defaultConf: { title: "", buttonText: "", buttonLink: "", imageUrl: "" } },
-  { component_type: "announcement_bar", name: "Top Bar & Announcement", defaultConf: { 
+  { component_type: "announcement_bar", name: "Header & Top Bar", defaultConf: { 
+    logoUrl: "/gora-logo.png",
     text: "Special Offer: Enjoy 40% OFF on Two Hot-Selling Products!", 
     linkText: "SHOP NOW",
     linkUrl: "/offers",
@@ -150,16 +151,33 @@ export default function AdminStorefrontPage() {
       {error && <div className="bg-red-50 text-red-600 p-4 rounded-md mb-6 text-sm">{error}</div>}
 
       <div className="space-y-8">
-                {/* Announcement Bar */}
+                {/* Header & Top Bar */}
         <section className="bg-white border border-gray-200 rounded-lg p-6">
           <div className="flex justify-between items-start mb-4">
-            <h2 className="text-lg font-bold flex items-center gap-2"><LayoutTemplate className="w-5 h-5 text-gray-400" /> Top Bar & Announcement</h2>
+            <h2 className="text-lg font-bold flex items-center gap-2"><LayoutTemplate className="w-5 h-5 text-gray-400" /> Header & Top Bar</h2>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={getComp("announcement_bar").is_active} onChange={(e) => toggleActive("announcement_bar", e.target.checked)} className="w-4 h-4 accent-black" />
               <span className="text-sm font-semibold">Active</span>
             </label>
           </div>
           <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold uppercase text-gray-700 mb-1">Logo Image URL</label>
+              <div className="flex gap-2 mb-2">
+                <input type="text" value={getComp("announcement_bar").config.logoUrl || ""} onChange={(e) => handleUpdate("announcement_bar", "logoUrl", e.target.value)} placeholder="/gora-logo.png" className="flex-1 border p-2 text-sm rounded focus:border-black outline-none" />
+                <label className="bg-gray-100 border border-gray-200 text-gray-700 px-4 py-2 rounded text-sm font-semibold cursor-pointer hover:bg-gray-200 transition flex items-center justify-center min-w-[120px]">
+                  {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Upload className="w-4 h-4 mr-2" /> Upload</>}
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, "announcement_bar", "logoUrl")} disabled={isUploading} />
+                </label>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer mt-2 text-xs font-semibold text-gray-600">
+                <input type="checkbox" checked={!!getComp("announcement_bar").config.invertLogo} onChange={(e) => handleUpdate("announcement_bar", "invertLogo", e.target.checked)} className="w-4 h-4 accent-black" />
+                Invert Logo Colors (Turn white logo into black)
+              </label>
+            </div>
+            
+            <hr className="my-4" />
+
             <div>
               <label className="block text-xs font-bold uppercase text-gray-700 mb-1">Announcement Text</label>
               <input type="text" value={getComp("announcement_bar").config.text || ""} onChange={(e) => handleUpdate("announcement_bar", "text", e.target.value)} placeholder="Special Offer: Enjoy 40% OFF..." className="w-full border p-2 text-sm rounded focus:border-black outline-none" />

@@ -167,7 +167,7 @@ export async function getProductsByCategory(categorySlug: string, subcategory?: 
     .order("created_at", { ascending: false });
     
   if (subcategory) {
-    query = query.eq("subcategory", subcategory);
+    query = query.ilike("subcategory", subcategory);
   }
 
   const { data: products } = await query;
